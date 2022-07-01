@@ -1,12 +1,15 @@
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    thread::JoinHandle,
+};
 
 mod downloader;
 
 #[derive(Default)]
 pub struct GApp {
     garrysmod_path: Option<PathBuf>,
+    download_thread: Option<JoinHandle<bool>>,
     wrong_folder: bool,
-    finished_downloading: bool,
 }
 
 impl eframe::App for GApp {
@@ -16,7 +19,7 @@ impl eframe::App for GApp {
                 egui::Layout::top_down_justified(egui::Align::Center),
                 |ui| {
                     ui.heading("Locate '...steam/steamapps/common/GarrysMod' folder");
-                    if ui.button("Open...").clicked() {
+                    if ui.button(egui::RichText::new("Open").size(25.0)).clicked() {
                         if let Some(path) = rfd::FileDialog::new().pick_folder() {
                             if validate_path(&path) {
                                 self.garrysmod_path = Some(path);
@@ -26,19 +29,33 @@ impl eframe::App for GApp {
                             }
                         }
                     }
-                    ui.add_enabled_ui(self.garrysmod_path.is_some() && !self.wrong_folder, |ui| {
-                        if ui.button("Start downloading...").clicked() {
-                            downloader::download_files(self.garrysmod_path.as_ref().unwrap());
-                            self.finished_downloading = true;
-                        }
-                    });
+
                     ui.separator();
-                    if self.finished_downloading {
-                        ui.label("Download finished!");
+
+                    ui.add_enabled_ui(
+                        self.garrysmod_path.is_some()
+                            && !self.wrong_folder
+                            && !self.download_thread.is_some(),
+                        |ui| {
+                            if ui.button(egui::RichText::new("Start").size(25.0)).clicked() {
+                                let garryclonepath = self.garrysmod_path.clone().unwrap();
+                                self.download_thread = Some(std::thread::spawn(move || {
+                                    downloader::download_files(&garryclonepath);
+                                    true
+                                }));
+                            }
+                        },
+                    );
+                    if self.download_thread.as_ref().is_some() {
+                        if self.download_thread.as_ref().unwrap().is_finished() {
+                            ui.heading("Download finished! Enjoy :)");
+                        } else {
+                            ui.heading("Download in progress...");
+                        }
                     } else if self.wrong_folder {
-                        ui.label("The folder you chose does not have the necessary subfolders. Try again!");
+                        ui.heading("The folder you chose is not the root 'GarrysMod' folder!");
                     } else if self.garrysmod_path.is_some() {
-                        ui.label("Folder seems correct!");
+                        ui.heading("Folder seems correct, press start to begin!");
                     }
                 },
             );
