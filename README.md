@@ -20,5 +20,5 @@ gwater installer but doesn't error out when you have more than one drive
 
 **A:** i created this installer mostly because i wanted to learn egui and also because the old installer had a bug if you had more than one drive on your system, where it couldn't locate your garry's mod folder, even if you explicitly told it where it was
 
-so, in conclusion, should you use this instead of a default launcher?
+so, in conclusion, should you use this instead of a default installer?
 i dunno man, whatever you want
