@@ -1,5 +1,5 @@
 # gwater-installer
-gwater installer but doesn't error out when you have more than one drives
+gwater installer but doesn't error out when you have more than one drive
 
 ## pros
 1. it can actually work with multiple drives
