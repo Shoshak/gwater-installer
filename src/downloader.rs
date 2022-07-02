@@ -1,3 +1,4 @@
+use crate::consts::constants;
 use bytes::buf::Buf;
 use reqwest::{
     blocking::Client,
@@ -5,26 +6,6 @@ use reqwest::{
 };
 use serde_json::Value;
 use std::path::Path;
-
-// need to be put in garrysmod/lua/bin folder
-const LUA_BIN_MODULES: [&'static str; 2] = ["gmcl_GWater_win32.dll", "gmcl_GWater_win64.dll"];
-// need to be put directly in garrysmod folder
-const GARRYSMOD_MODULES: [&'static str; 14] = [
-    "GFSDK_Aftermath_Lib.x86.dll",
-    "GFSDK_Aftermath_Lib.x64.dll",
-    "nvToolsExt32_1.dll",
-    "nvToolsExt64_1.dll",
-    "amd_ags_x86.dll",
-    "amd_ags_x64.dll",
-    "NvFlexExtReleaseD3D_x86.dll",
-    "NvFlexExtReleaseD3D_x64.dll",
-    "NvFlexReleaseD3D_x86.dll",
-    "NvFlexReleaseD3D_x64.dll",
-    "NvFlexReleaseCUDA_x86.dll",
-    "NvFlexReleaseCUDA_x64.dll",
-    "NvFlexExtReleaseCUDA_x86.dll",
-    "NvFlexExtReleaseCUDA_x64.dll",
-];
 
 const FETCH_LATEST_MODULES_LINK: &str =
     "https://api.github.com/repos/Mee12345/GWater-V3/releases/latest";
@@ -49,14 +30,14 @@ pub fn download_files(garrysmod_path: &Path) {
     modules_zip
         .extract(&current_directory)
         .expect("Could not extract files from a zip");
-    for f in LUA_BIN_MODULES {
+    for f in constants::LUA_BIN_MODULES {
         std::fs::rename(&current_directory.join(f), &lua_bin_path.join(f)).expect(&format!(
             "Could not move file {} to {}",
             &current_directory.join(f).display(),
             &lua_bin_path.join(f).display()
         ));
     }
-    for f in GARRYSMOD_MODULES {
+    for f in constants::GARRYSMOD_MODULES {
         std::fs::rename(&current_directory.join(f), &garrysmod_path.join(f)).expect(&format!(
             "Could not move file {} to {}",
             &current_directory.join(f).display(),

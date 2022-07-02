@@ -3,13 +3,17 @@ use std::{
     thread::JoinHandle,
 };
 
+mod consts;
 mod downloader;
+mod remover;
 
 #[derive(Default)]
 pub struct GApp {
     garrysmod_path: Option<PathBuf>,
     download_thread: Option<JoinHandle<bool>>,
     wrong_folder: bool,
+    modules_deleted: bool,
+    download_finished: bool,
 }
 
 impl eframe::App for GApp {
@@ -35,25 +39,40 @@ impl eframe::App for GApp {
                     ui.add_enabled_ui(
                         self.garrysmod_path.is_some()
                             && !self.wrong_folder
-                            && !self.download_thread.is_some(),
+                            && !self.download_thread.as_ref().is_some(),
                         |ui| {
                             if ui.button(egui::RichText::new("Start").size(25.0)).clicked() {
+                                self.download_finished = false;
                                 let garryclonepath = self.garrysmod_path.clone().unwrap();
                                 self.download_thread = Some(std::thread::spawn(move || {
                                     downloader::download_files(&garryclonepath);
                                     true
                                 }));
                             }
+                            if ui
+                                .button(egui::RichText::new("Delete").size(25.0))
+                                .clicked()
+                            {
+                                self.download_finished = false;
+                                remover::remove_modules(self.garrysmod_path.as_ref().unwrap());
+                                self.modules_deleted = true;
+                            }
                         },
                     );
+
                     if self.download_thread.as_ref().is_some() {
                         if self.download_thread.as_ref().unwrap().is_finished() {
-                            ui.heading("Download finished! Enjoy :)");
+                            self.download_thread = None;
+                            self.download_finished = true;
                         } else {
                             ui.heading("Download in progress...");
                         }
+                    } else if self.download_finished {
+                        ui.heading("Download finished! Enjoy :)");
                     } else if self.wrong_folder {
                         ui.heading("The folder you chose is not the root 'GarrysMod' folder!");
+                    } else if self.modules_deleted {
+                        ui.heading("GWater deleted :(");
                     } else if self.garrysmod_path.is_some() {
                         ui.heading("Folder seems correct, press start to begin!");
                     }
